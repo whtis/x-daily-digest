@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+  使用说明（给以后每天的运行）：
+  1. 复制本文件为 /workspace/digest/YYYY-MM-DD.html
+  2. 只替换下方 <script id="digest-data" type="application/json"> 里的 JSON，页面其余部分不用动。
+     字段：date, subtitle, stats[{label,value,note}], stocks[{title,tickers[],tags[{text,type:bull|bear|neutral}],
+     summary, steps[{title,body}], points[], links[{text,url}], take, risk}],
+     others[{category, items[ "纯文本，URL 自动变成链接" 或 {text,url} ]}], oneliner, meta
+     points/steps/take/risk/subtitle 里的 https 链接会自动渲染为 @作者 ↗ 可点链接。
+  3. 文本按纯文本写入（会被转义）；链接必须是摘要里的原始帖子链接，不要编造内容。
+-->
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>X 每日摘要</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#16181d;--mute:#5f6673;--line:#e6e8ef;--acc:#2f6bff;--bull:#0a9b61;--bear:#d93a3a;--warn:#fff6e0;--warnb:#f0b429;--chip:#eef2ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--mute:#9aa1ad;--line:#262a33;--acc:#6f9bff;--bull:#34d399;--bear:#f87171;--warn:#2a2412;--warnb:#c9971f;--chip:#1e2433}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",sans-serif}
+a{color:var(--acc);text-decoration:none;word-break:break-all}a:hover{text-decoration:underline}
+header{background:linear-gradient(135deg,#1b2a4e,#2f6bff);color:#fff;padding:36px 20px 28px}
+.wrap{max-width:1120px;margin:0 auto}header h1{margin:0;font-size:28px}header p{margin:6px 0 0;opacity:.85}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:22px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:13px;opacity:.8;font-weight:500}.stat span{font-size:20px;font-weight:700}.stat i{display:block;font-style:normal;font-size:12px;opacity:.75}
+.layout{display:grid;grid-template-columns:220px 1fr;gap:28px;padding:24px 20px}
+nav{position:sticky;top:16px;align-self:start;font-size:14px}nav h3{font-size:13px;color:var(--mute);margin:0 0 8px}
+nav a{display:block;color:var(--ink);padding:5px 10px;border-left:2px solid var(--line)}nav a:hover{border-color:var(--acc);text-decoration:none;color:var(--acc)}
+h2{font-size:22px;margin:8px 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h3{margin:0 0 10px;font-size:19px}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{background:var(--chip);color:var(--acc);font:600 13px ui-monospace,Menlo,monospace;padding:2px 9px;border-radius:999px}
+.tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid}.bull{color:var(--bull)}.bear{color:var(--bear)}.neutral{color:var(--mute)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.step{border:1px solid var(--line);border-radius:12px;padding:12px 14px;position:relative}.step b{display:block;color:var(--acc);font-size:14px;margin-bottom:4px}
+ul{padding-left:20px;margin:8px 0}.links{font-size:14px;color:var(--mute)}
+.call{background:var(--warn);border-left:4px solid var(--warnb);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:15px}.call b{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}.grid .card{padding:16px;margin:0}.grid h4{margin:0 0 6px}.grid li{font-size:14px}
+.pl{display:inline-block;font-size:12px;background:var(--chip);padding:0 7px;border-radius:6px;margin:0 2px;word-break:normal}.one{margin-top:20px;border-left:4px solid var(--acc);font-weight:500}header .pl{background:rgba(255,255,255,.2);color:#fff}
+.disc{font-size:13px;color:var(--mute);border-top:1px solid var(--line);padding:18px 20px 40px;text-align:center}
+@media(max-width:800px){.layout{grid-template-columns:1fr}nav{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;overflow-x:auto;gap:4px;padding:8px 0;white-space:nowrap}nav h3{display:none}nav a{border:1px solid var(--line);border-radius:999px;padding:3px 12px}header h1{font-size:23px}.card{padding:16px}}
+</style></head><body>
+<header><div class="wrap"><h1 id="t"></h1><p id="sub"></p><div class="stats" id="stats"></div></div></header>
+<div class="wrap layout"><nav id="toc"><h3>目录</h3></nav><main id="main"></main></div>
+<div class="disc" id="disc">本页内容整理自 X 公开帖子，仅供学习参考，不构成任何投资建议。投资有风险，决策请自行判断。</div>
+<script id="digest-data" type="application/json">
+{"date":"YYYY-MM-DD","subtitle":"示例占位——请替换为真实摘要内容","stats":[{"label":"QQQ","value":"—","note":"占位"},{"label":"SPY","value":"—","note":"占位"}],
+"stocks":[{"title":"主题示例","tickers":["$TICKER"],"tags":[{"text":"看多","type":"bull"},{"text":"风险","type":"bear"}],"summary":"主题概述占位。","steps":[{"title":"逻辑","body":"占位"},{"title":"条件","body":"占位"},{"title":"规则","body":"占位"}],"points":["要点占位"],"links":[{"text":"@author","url":"https://x.com/"}],"take":"我的看法占位","risk":"风险占位"}],
+"others":[{"category":"宏观","items":[{"text":"条目占位","url":"https://x.com/"}]}],"meta":"数据说明占位"}
+</script>
+<script>
+const D=JSON.parse(document.getElementById('digest-data').textContent),e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const X=s=>e(s).replace(/https:\/\/[^\s<（）]+/g,u=>{const m=u.match(/x\.com\/([^/]+)/);return `<a class="pl" href="${u}" target="_blank" rel="noopener">${m?'@'+m[1]:'链接'} ↗</a>`});
+document.title='X 每日摘要 · '+D.date;t.textContent='X 关注博主每日摘要 · '+D.date;sub.innerHTML=X(D.subtitle||'');
+stats.innerHTML=(D.stats||[]).map(s=>`<div class="stat"><b>${e(s.label)}</b><span>${e(s.value)}</span><i>${e(s.note||'')}</i></div>`).join('');
+const L=l=>`<a href="${e(l.url)}" target="_blank" rel="noopener">${e(l.text)}</a>`;let h='<h2 id="s">📈 股票与加密</h2>',toc='<a href="#s">股票与加密</a>';
+(D.stocks||[]).forEach((c,i)=>{toc+=`<a href="#c${i}">${e(c.title)}</a>`;h+=`<section class="card" id="c${i}"><h3>${e(c.title)}</h3><div class="chips">${(c.tickers||[]).map(x=>`<span class="chip">${e(x)}</span>`).join('')}${(c.tags||[]).map(x=>`<span class="tag ${e(x.type)}">${e(x.text)}</span>`).join('')}</div>${c.summary?`<p>${X(c.summary)}</p>`:''}${c.steps&&c.steps.length?`<div class="steps">${c.steps.map(s=>`<div class="step"><b>${X(s.title)}</b>${X(s.body)}</div>`).join('')}</div>`:''}${c.points&&c.points.length?`<ul>${c.points.map(p=>`<li>${X(p)}</li>`).join('')}</ul>`:''}${c.links&&c.links.length?`<div class="links">来源：${c.links.map(L).join(' · ')}</div>`:''}${c.take||c.risk?`<div class="call">${c.take?`<b>💡 我的看法</b>${X(c.take)}`:''}${c.risk?`<b style="margin-top:6px">⚠️ 风险</b>${X(c.risk)}`:''}</div>`:''}</section>`});
+h+='<h2 id="o">🗂 其他内容</h2><div class="grid">'+(D.others||[]).map(g=>`<div class="card"><h4>${e(g.category)}</h4><ul>${g.items.map(x=>`<li>${typeof x=='string'?X(x):e(x.text)+(x.url?' '+L({text:'↗',url:x.url}):'')}</li>`).join('')}</ul></div>`).join('')+'</div>';
+toc+='<a href="#o">其他内容</a>';h+=D.oneliner?`<div class="card one">${X(D.oneliner)}</div>`:'';main.innerHTML=h+(D.meta?`<p class="links" style="margin-top:20px">${e(D.meta)}</p>`:'');toc_=document.getElementById('toc');toc_.innerHTML+=toc;
+</script></body></html>
